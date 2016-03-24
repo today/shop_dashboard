@@ -1,4 +1,0 @@
-lib/bootstrap   
-lib/holderjs    
-lib/jquery      
-lib/jquery-knob keen-js
