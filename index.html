@@ -1,119 +1,135 @@
-<!DOCTYPE html>
 <html>
 <head>
-  <title>Westcoal 西煤交易</title>
-  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
-  <link rel="stylesheet" type="text/css" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-  <link rel="stylesheet" type="text/css" href="css/keen-dashboards.css" />
-</head>
-<body class="application">
+<meta charset="UTF-8" />
+<meta charset="UTF-8" />
+<title>Westcoal 西煤交易</title>
 
-  <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-    <div class="container-fluid">
-      <div class="navbar-header">
-        <a class="navbar-brand" href="#">Westcoal 西煤交易</a>
-      </div>
-      <div class="navbar-collapse collapse">
-        
-      </div>
-    </div>
-  </div>
+<script src="lib/jquery-2.2.2.js"></script>
+<script src="lib/highcharts.js"></script></head>
+<body>
+<div id="chart_1" style="width: 100%; height: 50%; margin: 0 auto"></div>
+<div id="chart_2" style="width: 50%; height: 50%; float:left; margin: 0 auto"></div>
+<div id="chart_3" style="width: 50%; height: 50%; float:right; margin: 0 auto"></div>
+<script language="JavaScript">
+var zxrs = 0;
+var baseUrl = "http://127.0.0.1:8080";
 
-  <div class="container-fluid">
-    <div class="row">
-
-      <div class="col-sm-8">
-        <div class="chart-wrapper">
-          <div class="chart-title">
-            Pageviews by browser (past 24 hours)
-          </div>
-          <div class="chart-stage">
-            <div id="chart-01"></div>
-          </div>
-          <div class="chart-notes">
-            This is a sample text region to describe this chart.
-          </div>
-        </div>
-      </div>
-
-      <div class="col-sm-4">
-        <div class="chart-wrapper">
-          <div class="chart-title">
-            Pageviews by browser (past 5 days)
-          </div>
-          <div class="chart-stage">
-            <div id="chart-02"></div>
-          </div>
-          <div class="chart-notes">
-            Notes go down here
-          </div>
-        </div>
-      </div>
-
-    </div>
+var getOnlineCount = function(){
+   //zxrs = zxrs + Math.random();
+   $.ajax({
+      url: baseUrl + "/onlineCount", 
+      success: function(result){
+         console.log( parseInt(result) );
+         zxrs = parseInt(result);
+      },
+      error:function(xhr,status,error){
+         console.log("error:" + error);
+      }
+   });
+};
 
 
-    <div class="row">
+$(document).ready(function() {  
+   var chart = {
+      type: 'spline',
+      animation: Highcharts.svg, // don't animate in IE < IE 10.
+      marginRight: 10,
+      events: {
+         load: function () {
+            // set up the updating of the chart each second
+            var series = this.series[0];
+            setInterval(function () {
+               var x = (new Date()).getTime(); // current time
+               var y = zxrs;
+               getOnlineCount();
+               series.addPoint([x, y], true, true);
+            }, 5000);
+         }
+      }
+   };
+   var title = {
+      text: '在线人数'   
+   };   
+   var xAxis = {
+      type: 'datetime',
+      tickPixelInterval: 50
+   };
+   var yAxis = {
+      title: {
+         text: '在线人数'
+      },
+      plotLines: [{
+         value: 1,
+         width: 2,
+         color: '#808080'
+      }]
+   };
+   var tooltip = {
+      formatter: function () {
+         return '<b>' + this.series.name + '</b><br/>' +
+         Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+         Highcharts.numberFormat(this.y, 2);
+      }
+   };
+   var plotOptions = {
+      area: {
+         pointStart: 1940,
+         marker: {
+            enabled: false,
+            symbol: 'circle',
+            radius: 2,
+            states: {
+               hover: {
+                  enabled: true
+               }
+            }
+         }
+      }
+   };
+   var legend = {
+      enabled: false
+   };
+   var exporting = {
+      enabled: false
+   };
+   var series= [{
+      name: 'Random data',
+      data: (function () {
+         // generate an array of random data
+         var data = [],time = (new Date()).getTime(),i;
+         for (i = -50; i <= 0; i += 1) {
 
-      <div class="col-sm-4">
-        <div class="chart-wrapper">
-          <div class="chart-title">
-            Impressions by advertiser
-          </div>
-          <div class="chart-stage">
-            <div id="chart-03"></div>
-          </div>
-          <div class="chart-notes">
-            Notes go down here
-          </div>
-        </div>
-      </div>
+            data.push({
+               x: time + i * 1000,
+               y: zxrs
+            });
+         }
+         return data;
+      }())    
+   }];     
 
-      <div class="col-sm-4">
-        <div class="chart-wrapper">
-          <div class="chart-title">
-            Impressions by device
-          </div>
-          <div class="chart-stage">
-            <div id="chart-04"></div>
-          </div>
-          <div class="chart-notes">
-            Notes go down here
-          </div>
-        </div>
-      </div>
+   var json = {};   
+   json.chart = chart; 
+   json.title = title;     
+   json.tooltip = tooltip;
+   json.xAxis = xAxis;
+   json.yAxis = yAxis; 
+   json.legend = legend;  
+   json.exporting = exporting;   
+   json.series = series;
+   json.plotOptions = plotOptions;
 
-      <div class="col-sm-4">
-        <div class="chart-wrapper">
-          <div class="chart-title">
-            Impressions by country
-          </div>
-          <div class="chart-stage">
-            <div id="chart-05"></div>
-          </div>
-          <div class="chart-notes">
-            Notes go down here
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <hr>
+   Highcharts.setOptions({
+      global: {
+         useUTC: false
+      }
+   });
+   $('#chart_1').highcharts(json);
+   $('#chart_2').highcharts(json);
+   $('#chart_3').highcharts(json);
 
-    <p class="small text-muted">Built with &#9829; by <a href="https://nibatech.cn">NBTech</a></p>
-
-  </div>
-
-  <script type="text/javascript" src="lib/jquery/dist/jquery.min.js"></script>
-  <script type="text/javascript" src="lib/bootstrap/dist/js/bootstrap.min.js"></script>
-
-  <script type="text/javascript" src="lib/holderjs/holder.js"></script>
-  <script>
-    Holder.add_theme("white", { background:"#fff", foreground:"#a7a7a7", size:10 });
-  </script>
-  <script type="text/javascript" src="lib/keen-js/dist/keen.min.js"></script>
-  <script type="text/javascript" src="js/meta.js"></script>
-  <script type="text/javascript" src="keen.dashboard.js"></script>
-
+});
+</script>
 </body>
 </html>
