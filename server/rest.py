@@ -20,6 +20,7 @@ urls = (
     '/onlineCount', 'onlineCount',
     '/orderCount', 'orderCount',
     '/orderSum', 'orderSum',
+    '/orderTop10', 'orderTop10',
     "/(.*)", "blankPage"
 )
 
@@ -48,6 +49,12 @@ class orderSum:
         web.header('Access-Control-Allow-Origin', '*')
         web.header('Access-Control-Allow-Credentials', 'true')
         return getOrderSum()
+
+class orderTop10:
+    def GET(self):
+        web.header('Access-Control-Allow-Origin', '*')
+        web.header('Access-Control-Allow-Credentials', 'true')
+        return getOrderTop()
 
 def getOnlineCount():
     db = getConnect()
@@ -80,9 +87,27 @@ def getOrderSum():
     db.close()
     return "%s" % data
 
+def getOrderTop():
+    db = getConnect()
+    cursor = db.cursor()
+    cursor.execute("SELECT name,total from nbt_order_product order by total desc limit 10")
+    result = {}
+    prod_names = []
+    prod_totals = []
+    for ( name, total ) in cursor:
+        prod_names.append(name)
+        prod_totals.append( str(total) )
+        result['name'] = prod_names
+        result['total'] = prod_totals
+    #print result
+    #print json.dumps(result, ensure_ascii=False,indent=2)
+    db.close()
+    return json.dumps(result, ensure_ascii=False,indent=2)
+
 def getConnect():
     # 打开数据库连接 
-    return MySQLdb.connect("localhost","root","","eshop" )
+    return MySQLdb.connect(host='localhost',user='root',passwd='',port=3306,db='eshop', charset='utf8')
+
 
 if __name__ == "__main__":
     app = web.application(urls, globals())
